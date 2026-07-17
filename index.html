@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect Four Arcade</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <script type="module" src="index.js"></script>
+</head>
+<body>
+  <section class="onboarding" id="onboardingScreen" aria-label="Connect Four intro">
+    <div class="onboarding-card">
+      <div class="logo-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <p class="eyebrow">Classic game. Fresh board.</p>
+      <h1>Connect Four</h1>
+      <p>Press anywhere to start</p>
+      <label class="skip-label"><input id="skipOnboarding" type="checkbox"> Skip next time</label>
+    </div>
+  </section>
+
+  <div class="app-shell">
+    <header class="topbar" aria-label="Game header">
+      <div>
+        <p class="eyebrow">Hybrid Phaser Edition</p>
+        <h1>Connect Four Arcade</h1>
+      </div>
+      <button class="ghost-button" id="openStatsButton" type="button">Stats</button>
+    </header>
+
+    <main>
+      <section class="screen setup-screen" id="setupScreen" aria-labelledby="setupTitle">
+        <div class="setup-copy">
+          <p class="eyebrow">Set the match</p>
+          <h2 id="setupTitle">Build your showdown</h2>
+          <p>Pick a mode, name the players, choose the match length, then drop into the board.</p>
+        </div>
+
+        <form class="setup-panel" id="setupForm">
+          <fieldset>
+            <legend>Game mode</legend>
+            <div class="segmented" role="radiogroup" aria-label="Game mode">
+              <label><input type="radio" name="gameMode" value="pvp" checked> Player vs Player</label>
+              <label><input type="radio" name="gameMode" value="pvc"> Player vs Computer</label>
+            </div>
+          </fieldset>
+
+          <div class="setup-grid player-one-fields">
+            <label>Player 1 name
+              <input id="playerOneName" maxlength="18" autocomplete="off" value="Player 1">
+            </label>
+            <label class="optional-field">Player 1 avatar
+              <input id="playerOneAvatar" maxlength="2" autocomplete="off" value="J">
+            </label>
+            <input id="playerOneCounter" type="hidden" value="yellow">
+          </div>
+
+          <div class="setup-grid player-two-fields">
+            <label>Player 2 name
+              <input id="playerTwoName" maxlength="18" autocomplete="off" value="Player 2">
+            </label>
+            <label class="optional-field">Player 2 avatar
+              <input id="playerTwoAvatar" maxlength="2" autocomplete="off" value="S">
+            </label>
+            <input id="playerTwoCounter" type="hidden" value="red">
+          </div>
+
+          <div class="setup-grid settings-grid">
+            <label>Match format
+              <select id="matchFormat">
+                <option value="single">Single game</option>
+                <option value="bestOfThree">Best of three</option>
+                <option value="firstToTwo">First to two wins</option>
+                <option value="firstToThree">First to three wins</option>
+                <option value="firstToFive">First to five wins</option>
+              </select>
+            </label>
+            <label class="timer-field">Turn timer
+              <select id="timerSeconds">
+                <option value="0">No time limit</option>
+                <option value="10">10 seconds</option>
+                <option value="20" selected>20 seconds</option>
+                <option value="30">30 seconds</option>
+                <option value="45">45 seconds</option>
+                <option value="60">60 seconds</option>
+              </select>
+            </label>
+            <label class="timeout-field">Timeout
+              <select id="timeoutBehavior">
+                <option value="skip">Skip turn</option>
+                <option value="auto">Automatic move</option>
+              </select>
+            </label>
+            <label class="difficulty-field">AI difficulty
+              <select id="difficulty"></select>
+            </label>
+            <label>Theme
+              <select id="themeSelect"></select>
+            </label>
+          </div>
+
+          <div class="preview-row" id="setupPreview" aria-label="Match preview"></div>
+
+          <p class="form-error" id="setupError" role="alert"></p>
+          <div class="form-actions">
+            <button class="primary-button" id="startGameButton" type="submit">Start Game</button>
+            <button class="ghost-button" id="clearSaveButton" type="button">Clear Saved Game</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="screen game-screen hidden" id="gameScreen" aria-labelledby="matchTitle">
+        <div class="match-hud">
+          <div>
+            <p class="eyebrow" id="matchModeLabel">Local match</p>
+            <h2 id="matchTitle">Round 1</h2>
+          </div>
+          <div class="score-strip" id="scoreStrip"></div>
+          <div class="hud-actions">
+            <button class="ghost-button" id="restartRoundButton" type="button">Restart Round</button>
+            <button class="ghost-button" id="pauseButton" type="button">Pause</button>
+            <button class="ghost-button" id="soundButton" type="button" aria-pressed="false">Sound Off</button>
+            <button class="ghost-button" id="musicButton" type="button" aria-pressed="false">Music Off</button>
+            <button class="ghost-button" id="paletteButton" type="button" aria-expanded="false">Change Colours</button>
+            <button class="ghost-button" id="themeButton" type="button" aria-expanded="false">Themes</button>
+            <button class="ghost-button" id="resetMatchButton" type="button">Reset Match</button>
+            <button class="ghost-button" id="returnSetupButton" type="button">Menu</button>
+          </div>
+        </div>
+
+        <div class="colour-panel hidden" id="colourPanel" aria-label="Counter colour controls">
+          <div>
+            <p class="eyebrow">Counter colours</p>
+            <strong>Change colours during the match</strong>
+          </div>
+          <div class="palette-group" id="paletteOne" aria-label="Player 1 colours"></div>
+          <div class="palette-group" id="paletteTwo" aria-label="Player 2 colours"></div>
+          <p class="form-error" id="colourError" role="alert"></p>
+        </div>
+
+        <div class="theme-panel hidden" id="themePanel" aria-label="Theme controls"></div>
+
+        <div class="arena-layout">
+          <aside class="player-card" id="playerOneCard"></aside>
+          <section class="board-stage" aria-label="Connect Four board">
+            <div class="turn-banner">
+              <span id="turnMessage">Ready</span>
+              <span class="difficulty-badge" id="difficultyBadge"></span>
+            </div>
+            <div class="countdown-wrap" id="countdownWrap" aria-label="Turn countdown">
+              <svg class="timer-ring" viewBox="0 0 120 120" aria-hidden="true">
+                <circle cx="60" cy="60" r="52"></circle>
+                <circle id="timerProgress" cx="60" cy="60" r="52"></circle>
+              </svg>
+              <div class="timer-readout"><strong id="timerNumber">20</strong><span>sec</span></div>
+            </div>
+            <div class="final-count" id="finalCount" aria-hidden="true"></div>
+            <div id="phaserBoard" class="phaser-board" tabindex="0" role="application" aria-label="Connect Four board. Use number keys one to seven, or arrow keys and enter, to choose a column."></div>
+          </section>
+          <aside class="player-card" id="playerTwoCard"></aside>
+        </div>
+      </section>
+    </main>
+
+    <section class="modal hidden" id="roundModal" role="dialog" aria-modal="true" aria-labelledby="roundResultTitle">
+      <div class="modal-panel">
+        <p class="eyebrow" id="roundKicker">Round result</p>
+        <h2 id="roundResultTitle">Round complete</h2>
+        <p id="roundResultCopy"></p>
+        <div class="achievement-row" id="achievementRow"></div>
+        <div class="form-actions">
+          <button class="primary-button" id="nextRoundButton" type="button">Next Round</button>
+          <button class="ghost-button" id="rematchButton" type="button">Rematch</button>
+          <button class="ghost-button" id="newPlayersButton" type="button">New Players</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="modal hidden" id="pauseModal" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+      <div class="modal-panel compact-modal">
+        <p class="eyebrow">Paused</p>
+        <h2 id="pauseTitle">Match paused</h2>
+        <p>The board is locked and the countdown is frozen.</p>
+        <button class="primary-button" id="resumeButton" type="button">Resume</button>
+      </div>
+    </section>
+
+    <section class="modal hidden" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="modal-panel compact-modal">
+        <p class="eyebrow" id="confirmKicker">Confirm</p>
+        <h2 id="confirmTitle">Are you sure?</h2>
+        <p id="confirmCopy"></p>
+        <div class="form-actions">
+          <button class="primary-button" id="confirmAcceptButton" type="button">OK</button>
+          <button class="ghost-button" id="confirmCancelButton" type="button">Cancel</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="modal hidden" id="statsModal" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
+      <div class="modal-panel stats-panel">
+        <p class="eyebrow">Progression</p>
+        <h2 id="statsTitle">Difficulty stats</h2>
+        <div id="statsContent"></div>
+        <button class="primary-button" id="closeStatsButton" type="button">Close</button>
+      </div>
+    </section>
+
+    <div class="sr-only" id="liveRegion" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+</body>
+</html>

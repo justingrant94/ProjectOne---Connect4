@@ -1,0 +1,10 @@
+{
+  "name": "connect-four-arcade",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 5173",
+    "check": "node --check index.js && node --check js/constants.js && node --check js/rules.js && node --check js/storage.js && node --check js/progression.js && node --check js/ai/search.js && node --check js/phaser/BoardScene.js && node --check js/phaser/game.js"
+  }
+}
